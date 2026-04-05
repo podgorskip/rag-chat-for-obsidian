@@ -90,10 +90,12 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 class MessageRequest(BaseModel):
     message: str
+    allow_external: bool | None = None
 
 class MessageResponse(BaseModel):
-    answer: str
-    total_tokens: int
+    answer: str | None = None
+    total_tokens: int = 0
+    needs_confirmation: bool = False
 
 class SettingsPayload(BaseModel):
     vault_path:      str
@@ -104,13 +106,22 @@ class SettingsPayload(BaseModel):
 def ui():
     return FileResponse("templates/index.html")
 
+
 @app.post("/chat", response_model=MessageResponse)
 def chat(req: MessageRequest):
     if chatbot is None:
         raise HTTPException(503, "Chatbot not initialized.")
-    result = chatbot.chat(req.message)
+
+    if req.allow_external is None:
+        confirm_external = lambda: False
+    else:
+        confirm_external = lambda: req.allow_external
+
+    result = chatbot.chat(req.message, confirm_external=confirm_external)
+
     if result is None:
-        raise HTTPException(404, "No relevant context found.")
+        return MessageResponse(needs_confirmation=True)
+
     answer, _, tokens = result
     return MessageResponse(answer=answer, total_tokens=tokens["total_tokens"])
 
