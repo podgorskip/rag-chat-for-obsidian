@@ -75,17 +75,20 @@ class RAG:
 
     return self._prepare_chunks(candidates)
 
-  def rephrase_query(self, original_query: str) -> str:
+  def rephrase_query(self, original_query: str, history: list = None) -> str:
+      messages = [{"role": "system", "content": self.config.REPHRASE_PROMPT}]
+
+      if history:
+          messages.extend(history[-4:])
+
+      messages.append({"role": "user", "content": original_query})
+
       response = self.client.chat.completions.create(
           model=self.llm_model,
-          messages=[
-              {"role": "system", "content": self.config.REPHRASE_PROMPT},
-              {"role": "user", "content": original_query}
-          ]
+          messages=messages
       )
       self._track_tokens(response.usage)
       return response.choices[0].message.content.strip()
-
 
   def build_context(self, chunks: list) -> str:
     context_text = ""

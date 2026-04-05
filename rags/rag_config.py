@@ -8,4 +8,4 @@ class Config:
                             "search-engine friendly. Output ONLY the rephrased query.")
     self.ANSWER_PROMPT = ("You are a helpful assistant answering questions. Use provided passages if available. "
                           "If the passages are not relevant to the question, you may ignore them. If you don't know "
-                          "the answer, say you don't know. Be concise.")
+                          "the answer, say you don't know. Be concise and don't use 'The passage...'")
