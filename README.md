@@ -13,8 +13,9 @@ Vault is a local, privacy-first AI chatbot that reads your Obsidian vault, index
    - [1. Clone and create environment](#1-clone-and-create-environment)
    - [2. Install Python dependencies](#2-install-python-dependencies)
    - [3. Install and start Ollama](#3-install-and-start-ollama)
-   - [4. Configure your vault](#4-configure-your-vault)
-   - [5. Build the knowledge base](#5-build-the-knowledge-base)
+   - [4. Install and start Redis](#4-install-and-start-redis)
+   - [5. Configure your vault](#5-configure-your-vault)
+   - [6. Build the knowledge base](#6-build-the-knowledge-base)
 5. [Running the app](#running-the-app)
 6. [Using the chat interface](#using-the-chat-interface)
 7. [Configuration reference](#configuration-reference)
@@ -52,8 +53,8 @@ Your Obsidian notes (.md files)
   • Builds a context string within token limits
         │
         ▼
-[ Chatbot (chatbot.py) ]
-  • Maintains full conversation history
+[ Chatbot (chatbot.py) & Redis ]
+  • Maintains full conversation history per session in Redis
   • Injects fresh retrieved context into every turn
   • Sends system prompt + history + context to the LLM
         │
@@ -63,14 +64,15 @@ Your Obsidian notes (.md files)
   • Normalises both into a single response interface
         │
         ▼
-[ FastAPI (api.py) ]
-  • Exposes /chat, /reset, /settings, /settings/rebuild
+[ FastAPI (app.py & api/) ]
+  • Exposes modular API routes (/chat, /sessions, /settings, etc.)
   • Serves the web UI at /
         │
         ▼
 [ Browser UI (index.html) ]
   • Dark, startup-style chat interface
   • Thinking animation while model responds
+  • Rich Markdown rendering for responses
   • Settings panel to change vault path at runtime
 ```
 
@@ -80,18 +82,23 @@ Your Obsidian notes (.md files)
 
 ```
 rag-chat/
-├── .env                       # Configuration (vault path, etc.)
+├── .env                       # Configuration (vault path, redis url, etc.)
 ├── chatbot/
-│   └── chatbot.py             # Conversation history manager
+│   └── chatbot.py             # Conversation history manager (Redis)
 ├── connectors/
 │   └── obsidian_connector.py  # Vault reader + embedder
 ├── rags/
 │   ├── rag.py                 # Core retrieval + generation logic
 │   ├── llm_client.py          # Ollama / OpenAI abstraction
 │   └── rag_config.py          # Prompts, thresholds, token limits
+├── api/                       # Modular FastAPI backend
+│   ├── routes/                # Endpoints (chat, sessions, reset, settings)
+│   ├── dependencies.py        # Shared dependencies (e.g., get_chatbot)
+│   ├── models.py              # Pydantic schemas
+│   └── utils.py               # Utilities and chatbot builder
 ├── templates/
 │   └── index.html             # Web UI
-├── app.py                     # FastAPI server
+├── app.py                     # FastAPI server entry point
 ├── requirements.txt
 └── generated_sources/
     └── knowledge_base.pkl     # Auto-generated, do not edit
@@ -103,6 +110,7 @@ rag-chat/
 
 - Python 3.11+
 - [Ollama](https://ollama.com) installed and running locally
+- [Redis](https://redis.io/) installed and running locally
 - An Obsidian vault with markdown notes (or any folder of `.md` files)
 - ~2 GB disk space for the default model
 
@@ -162,7 +170,19 @@ curl http://localhost:11434
 # → Ollama is running
 ```
 
-### 4. Configure your vault
+### 4. Install and start Redis
+
+Redis is used to persist and manage multi-session conversation histories.
+
+```bash
+# Install Redis (macOS)
+brew install redis
+
+# Start the Redis server (runs in background)
+brew services start redis
+```
+
+### 5. Configure your vault
 
 Create a `.env` file in the project root:
 
@@ -170,6 +190,7 @@ Create a `.env` file in the project root:
 VAULT_PATH=/Users/yourname/Documents/MyVault
 EXCLUDE_FOLDERS=templates,archive,.trash
 KNOWLEDGE_BASE=generated_sources/knowledge_base.pkl
+REDIS_URL=redis://localhost:6379/0
 ```
 
 | Variable | Description |
@@ -177,18 +198,19 @@ KNOWLEDGE_BASE=generated_sources/knowledge_base.pkl
 | `VAULT_PATH` | Absolute path to your Obsidian vault root |
 | `EXCLUDE_FOLDERS` | Comma-separated folder names to skip |
 | `KNOWLEDGE_BASE` | Where to save the embedded index |
+| `REDIS_URL` | Connection URL for your Redis instance |
 
-### 5. Build the knowledge base
+### 6. Build the knowledge base
 
 The server builds it automatically on first start, but you can also run it manually:
 
 ```bash
-python obsidian_connector.py /Users/yourname/Documents/MyVault
+python connectors/obsidian_connector.py /Users/yourname/Documents/MyVault
 ```
 
 With options:
 ```bash
-python obsidian_connector.py /path/to/vault \
+python connectors/obsidian_connector.py /path/to/vault \
     --output generated_sources/knowledge_base.pkl \
     --model all-MiniLM-L6-v2 \
     --exclude-dirs templates archive .trash \
@@ -214,11 +236,13 @@ http://localhost:8000
 
 ## Using the chat interface
 
-**Asking questions** - type your question and press `Enter`. The model retrieves the most relevant passages from your notes and uses them to answer. It remembers the conversation so follow-up questions like *"tell me more"* or *"what did you mean by that?"* work correctly.
+**Asking questions** - type your question and press `Enter`. The model retrieves the most relevant passages from your notes and uses them to answer, complete with full Markdown formatting (lists, headers, code blocks). It remembers the conversation so follow-up questions like *"tell me more"* or *"what did you mean by that?"* work correctly.
 
 **Token counter** - if you're using OpenAI, each response shows the cumulative token count. Ollama does not report real token counts so this is hidden.
 
-**Reset** - clears the conversation history on both the frontend and the server. The knowledge base is not affected. Use this to start a fresh topic.
+**Sessions** - The app now supports multiple persistent chat sessions, powered by Redis.
+
+**Reset** - clears the current conversation history on both the frontend and the server. The knowledge base is not affected. Use this to start a fresh topic.
 
 **Settings panel** - click ⚙ Settings in the header to:
 - Change the vault path
@@ -239,17 +263,18 @@ All model behaviour is controlled in `rags/rag_config.py`:
 
 ```python
 class Config:
-    TOP_K          = 0.05      # top 5% of chunks by similarity score
-    MIN_SIMILARITY = 0.3       # minimum cosine similarity to include a chunk
-    DELTA_CUTOFF   = 0.15      # drop chunks if similarity drops sharply
-    MAX_CONTEXT_TOKENS = 2000  # max tokens to send as context
-
-    ANSWER_PROMPT = """You are a helpful assistant. Answer the user's question
-    using ONLY the provided context passages. If the answer is not in the
-    context, say so clearly."""
-
-    REPHRASE_PROMPT = """Rephrase the following question to be more precise
-    and retrieval-friendly. Return only the rephrased question."""
+    def __init__(self):
+        self.MAX_CONTEXT_TOKENS = 2000
+        self.MIN_SIMILARITY = 0.5
+        self.DELTA_CUTOFF = 0.08
+        self.TOP_K = 0.5
+        
+        self.REPHRASE_PROMPT = """You are a helpful assistant. Rephrase the following user query to be more descriptive and
+        search-engine friendly. Output ONLY the rephrased query."""
+        
+        self.ANSWER_PROMPT = """You are a fast, sophisticated, direct assistant.
+        Base only on the context attached. Use your knowledge only to understand query, not to generate answer.
+        ..."""
 ```
 
 | Parameter | Effect |
@@ -263,7 +288,7 @@ class Config:
 
 ## Using OpenAI instead of Ollama
 
-Update `api.py`:
+Update `api/utils.py`:
 
 ```python
 client = LLMClient(
@@ -280,7 +305,7 @@ Or store the key in `.env`:
 OPENAI_API_KEY=sk-...
 ```
 
-And load it in `api.py`:
+And load it in `api/utils.py`:
 
 ```python
 client = LLMClient(
@@ -306,7 +331,7 @@ curl -X POST http://localhost:8000/settings/rebuild
 
 **Via CLI:**
 ```bash
-python obsidian_connector.py /path/to/vault --output generated_sources/knowledge_base.pkl
+python connectors/obsidian_connector.py /path/to/vault --output generated_sources/knowledge_base.pkl
 ```
 
 The server reloads the new index automatically without a restart.
@@ -318,21 +343,32 @@ The server reloads the new index automatically without a restart.
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/` | Serves the web UI |
-| `POST` | `/chat` | Send a message, get an answer |
-| `POST` | `/reset` | Clear conversation history |
+| `POST` | `/chat` | Send a message to a session, get an answer |
+| `GET` | `/sessions` | List all active chat session IDs |
+| `POST` | `/sessions` | Create a new chat session |
+| `GET` | `/sessions/{session_id}/history`| Retrieve display history for a session |
+| `DELETE`| `/sessions/{session_id}` | Delete a chat session |
+| `POST` | `/reset` | Clear a session's history |
 | `GET` | `/settings` | Read current `.env` config |
 | `POST` | `/settings` | Save config and rebuild chatbot |
 | `POST` | `/settings/rebuild` | Force re-index the vault |
-| `GET` | `/health` | Check if server is ready |
 
 ### POST /chat
 
 ```json
 // request
-{ "message": "What is RAG?" }
+{
+  "message": "What is RAG?",
+  "session_id": "123e4567-e89b-12d3-a456-426614174000",
+  "allow_external": false
+}
 
 // response
-{ "answer": "RAG stands for...", "total_tokens": 0 }
+{
+  "answer": "RAG stands for...",
+  "total_tokens": 125,
+  "needs_confirmation": false
+}
 ```
 
 ### POST /settings
@@ -350,6 +386,7 @@ The server reloads the new index automatically without a restart.
 ## Troubleshooting
 
 **`404 Not Found` from Ollama**
+
 The model name doesn't match what's installed. Run `ollama list` and use the exact name shown.
 
 **Empty Ollama list / no models**
@@ -359,7 +396,7 @@ ollama pull llama3.2
 
 **Answers are irrelevant or hallucinated**
 
-Lower `MIN_SIMILARITY` in `rag_config.py` to retrieve more chunks, or rebuild the index after updating your notes.
+Lower `MIN_SIMILARITY` in `rags/rag_config.py` to retrieve more chunks, or rebuild the index after updating your notes.
 
 **Slow responses**
 
@@ -369,7 +406,7 @@ Switch to a smaller model (`llama3.2:1b`). First response after starting Ollama 
 
 ## Privacy
 
-Everything runs locally. Your notes, queries, and conversation history never leave your machine when using Ollama. The only network requests are to Google Fonts for the UI typography and to `huggingface.co` once to download the embedding model on first run.
+Everything runs locally. Your notes, queries, and conversation history never leave your machine when using Ollama. The only network requests are to Google Fonts for the UI typography, to a CDN for Markdown rendering scripts, and to `huggingface.co` once to download the embedding model on first run.
 
 ---
 
