@@ -24,14 +24,14 @@ Vault is a local, privacy-first AI chatbot that reads your Obsidian vault, index
 10. [API reference](#api-reference)
 11. [Troubleshooting](#troubleshooting)
 12. [Privacy](#privacy)
-13. [Demo](#demo)
 
 ---
 
 ## How it works
 
 
-https://github.com/user-attachments/assets/56ae7ca0-aed0-4c6f-b173-247251209e08
+https://github.com/user-attachments/assets/6be89912-1faa-419d-a308-d2856bcc76b9
+
 
 
 ```
@@ -407,9 +407,3 @@ Switch to a smaller model (`llama3.2:1b`). First response after starting Ollama 
 ## Privacy
 
 Everything runs locally. Your notes, queries, and conversation history never leave your machine when using Ollama. The only network requests are to Google Fonts for the UI typography, to a CDN for Markdown rendering scripts, and to `huggingface.co` once to download the embedding model on first run.
-
----
-
-## Demo
-
-▶ [Watch the full demo - querying Vault in action](https://drive.google.com/file/d/1ZTRFv3HtKwf3BFj4jp_u6shBhU8wo-zv/view?usp=share_link)
