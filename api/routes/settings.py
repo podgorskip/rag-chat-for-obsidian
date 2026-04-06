@@ -15,7 +15,8 @@ def write_settings(payload: SettingsPayload, request: Request):
 
     try:
         embed_model = request.app.state.embed_model
-        request.app.state.chatbot = build_chatbot(embed_model)
+        redis_client = request.app.state.redis_client
+        request.app.state.chatbot = build_chatbot(embed_model, redis_client)
     except Exception as e:
         raise HTTPException(500, f"Failed to rebuild knowledge base: {e}")
 
@@ -31,7 +32,8 @@ def rebuild(request: Request):
 
     try:
         embed_model = request.app.state.embed_model
-        request.app.state.chatbot = build_chatbot(embed_model)
+        redis_client = request.app.state.redis_client
+        request.app.state.chatbot = build_chatbot(embed_model, redis_client)
     except Exception as e:
         raise HTTPException(500, f"Rebuild failed: {e}")
 

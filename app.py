@@ -19,6 +19,7 @@ async def lifespan(app: FastAPI):
     logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
     embed_model = SentenceTransformer("all-MiniLM-L6-v2")
     redis_client = get_redis_client()
+    app.state.redis_client = redis_client
     app.state.embed_model = embed_model
     app.state.chatbot = build_chatbot(embed_model, redis_client)
 
