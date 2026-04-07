@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from redis import Redis
 import redis as redis_lib
 from chatbot.chatbot import Chatbot
-from connectors.obsidian_connector import build_knowledge_base
+from connectors.vault_connector import build_knowledge_base
 from rags.llm_client import LLMClient
 from rags.rag import RAG
 
