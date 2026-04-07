@@ -1,6 +1,6 @@
-# RAG Chatbot for Obsidian
+# RAG Chatbot for Knowledge Vaults
 
-Vault is a local, privacy-first AI chatbot that reads your Obsidian vault, indexes it into a searchable knowledge base, and lets you have multi-turn conversations with your own notes - all running on your machine with no data leaving it.
+Vault is a local, privacy-first AI chatbot that reads your knowledge vault (like Obsidian), indexes it into a searchable knowledge base, and lets you have multi-turn conversations with your own notes - all running on your machine with no data leaving it.
 
 ---
 
@@ -35,10 +35,10 @@ https://github.com/user-attachments/assets/6be89912-1faa-419d-a308-d2856bcc76b9
 
 
 ```
-Your Obsidian notes (.md files)
+Your notes (.md files)
         │
         ▼
-[ obsidian_connector.py ]
+[ vault_connector.py ]
   • Reads all markdown files recursively
   • Strips wikilinks, tags, frontmatter, code blocks
   • Splits each note by heading into chunks
@@ -86,7 +86,7 @@ rag-chat/
 ├── chatbot/
 │   └── chatbot.py             # Conversation history manager (Redis)
 ├── connectors/
-│   └── obsidian_connector.py  # Vault reader + embedder
+│   └── vault_connector.py  # Vault reader + embedder
 ├── rags/
 │   ├── rag.py                 # Core retrieval + generation logic
 │   ├── llm_client.py          # Ollama / OpenAI abstraction
@@ -111,7 +111,7 @@ rag-chat/
 - Python 3.11+
 - [Ollama](https://ollama.com) installed and running locally
 - [Redis](https://redis.io/) installed and running locally
-- An Obsidian vault with markdown notes (or any folder of `.md` files)
+- A vault (eg. Obsidian) with markdown notes (or any folder of `.md` files)
 - ~2 GB disk space for the default model
 
 ---
@@ -121,7 +121,7 @@ rag-chat/
 ### 1. Clone and create environment
 
 ```bash
-git clone https://github.com/podgorskip/rag-chatbot-obsidian-vault
+git clone https://github.com/podgorskip/rag-chatbot-knowledge-vault
 cd rag-chat
 
 conda create -n rag-chat python=3.12
@@ -195,7 +195,7 @@ REDIS_URL=redis://localhost:6379/0
 
 | Variable | Description |
 |---|---|
-| `VAULT_PATH` | Absolute path to your Obsidian vault root |
+| `VAULT_PATH` | Absolute path to your knowledge vault root |
 | `EXCLUDE_FOLDERS` | Comma-separated folder names to skip |
 | `KNOWLEDGE_BASE` | Where to save the embedded index |
 | `REDIS_URL` | Connection URL for your Redis instance |
@@ -205,12 +205,12 @@ REDIS_URL=redis://localhost:6379/0
 The server builds it automatically on first start, but you can also run it manually:
 
 ```bash
-python connectors/obsidian_connector.py /Users/yourname/Documents/MyVault
+python connectors/vault_connector.py /Users/yourname/Documents/MyVault
 ```
 
 With options:
 ```bash
-python connectors/obsidian_connector.py /path/to/vault \
+python connectors/vault_connector.py /path/to/vault \
     --output generated_sources/knowledge_base.pkl \
     --model all-MiniLM-L6-v2 \
     --exclude-dirs templates archive .trash \
@@ -331,7 +331,7 @@ curl -X POST http://localhost:8000/settings/rebuild
 
 **Via CLI:**
 ```bash
-python connectors/obsidian_connector.py /path/to/vault --output generated_sources/knowledge_base.pkl
+python connectors/vault_connector.py /path/to/vault --output generated_sources/knowledge_base.pkl
 ```
 
 The server reloads the new index automatically without a restart.
