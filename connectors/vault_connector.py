@@ -83,16 +83,19 @@ def read_vault(
             title = md_file.stem
             rel = str(md_file.relative_to(vault))
 
-            chunks = chunk_by_heading(title, raw)
+            content = clean_markdown(raw)
 
-            for chunk in chunks:
-                chunk["source"] = rel
-                records.append(chunk)
+            if content:
+                records.append({
+                    "title": title,
+                    "content": content,
+                    "source": rel,
+                })
 
         except Exception as e:
             log.warning(f"Could not read {md_file}: {e}")
 
-    log.info(f"Loaded {len(records)} chunks from {vault_path}")
+    log.info(f"Loaded {len(records)} notes from {vault_path}")
     return records
 
 def build_knowledge_base(
