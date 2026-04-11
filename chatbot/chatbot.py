@@ -75,7 +75,7 @@ class Chatbot:
             query: str,
             session_id: str,
             confirm_external: Callable[[], bool] | None = None,
-    ) -> tuple[str, object, int] | None:
+    ):
         history = self._load_history(session_id)
         history_str = format_history(history)
         title = textwrap.shorten(query, width=60, placeholder="…")
@@ -124,7 +124,15 @@ class Chatbot:
         self._track_tokens(response.usage)
         self._log(standalone_query, context, answer)
 
-        return answer, response.usage, self.rag.cumulative_tokens
+        return {
+            "answer": answer,
+            "tokens": self.rag.cumulative_tokens,
+            "thinking": standalone_query,
+            "sources": [
+                {"title": chunk["title"], "source": chunk["content"]}
+                for chunk in chunks
+            ]
+        }
 
     def _track_tokens(self, usage) -> None:
         if self.rag.client.provider != "openai" or not usage:

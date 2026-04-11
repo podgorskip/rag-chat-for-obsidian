@@ -7,7 +7,7 @@ class Config:
     bm25_weight: float = 0.3
     top_fraction: float = 0.2
     min_similarity: float = 0.65
-    delta_cutoff: float = 0.08
+    delta_cutoff: float = 0.12
     max_context_tokens: int = 10000
 
     contextualize_prompt: str = field(default=dedent("""\

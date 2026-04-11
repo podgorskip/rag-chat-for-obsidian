@@ -19,5 +19,9 @@ def chat(
     if result is None:
         return MessageResponse(needs_confirmation=True)
 
-    answer, _, tokens = result
-    return MessageResponse(answer=answer, total_tokens=tokens["total_tokens"])
+    return MessageResponse(
+        answer=result["answer"],
+        thinking=result["thinking"],
+        sources=result["sources"],
+        total_tokens=result["tokens"]["total_tokens"]
+    )

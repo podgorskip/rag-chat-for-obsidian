@@ -28,6 +28,16 @@
 
     --radius:    4px;
     --sidebar-w: 280px;
+
+    --think-bg:    #0A0E14;
+    --think-border:#1C2535;
+    --think-text:  #6A8FAF;
+    --think-head:  #4A7099;
+    --source-bg:   #111510;
+    --source-border:#233020;
+    --source-text: #5A8A55;
+    --source-chip: #162113;
+    --source-chip-border: #2A4027;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -41,62 +51,33 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* ── layout ── */
-  .app {
-    position: relative; z-index: 1;
-    display: flex; height: 100vh;
-  }
+  .app { position: relative; z-index: 1; display: flex; height: 100vh; }
 
   /* ── sidebar ── */
   .sidebar {
     width: var(--sidebar-w); flex-shrink: 0;
-    background: var(--bg);
-    border-right: 1px solid var(--border);
-    display: flex; flex-direction: column;
-    overflow: hidden;
+    background: var(--bg); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow: hidden;
   }
-
-  .sidebar-top {
-    padding: 32px 20px 24px;
-    flex-shrink: 0;
-  }
-
+  .sidebar-top { padding: 32px 20px 24px; flex-shrink: 0; }
   .logo {
-    display: flex; align-items: center; gap: 6px;
-    margin-bottom: 32px;
-    font-size: 24px; font-weight: 700;
-    letter-spacing: -0.04em;
-    color: var(--text);
+    display: flex; align-items: center; gap: 6px; margin-bottom: 32px;
+    font-size: 24px; font-weight: 700; letter-spacing: -0.04em; color: var(--text);
   }
-
-  .logo-arrow {
-    color: var(--text);
-    font-weight: 400;
-  }
-
+  .logo-arrow { color: var(--text); font-weight: 400; }
   .new-chat-btn {
-    width: 100%; padding: 14px 16px;
-    background: var(--coral);
-    color: #ffffff;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px; font-weight: 500;
-    border: none;
-    border-radius: var(--radius); cursor: pointer; transition: background 0.2s;
+    width: 100%; padding: 14px 16px; background: var(--coral); color: #fff;
+    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+    border: none; border-radius: var(--radius); cursor: pointer; transition: background 0.2s;
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
   .new-chat-btn:hover { background: var(--coral-hover); }
-
   .sessions-scroll {
     flex: 1; overflow-y: auto; padding: 12px;
     display: flex; flex-direction: column; gap: 4px;
     scrollbar-width: thin; scrollbar-color: var(--border) transparent;
   }
-
-  .sessions-empty {
-    padding: 32px 12px; text-align: center;
-    font-size: 13px; color: var(--muted);
-  }
-
+  .sessions-empty { padding: 32px 12px; text-align: center; font-size: 13px; color: var(--muted); }
   .session-item {
     padding: 12px 14px; border-radius: var(--radius); cursor: pointer;
     transition: all 0.15s; border: 1px solid transparent;
@@ -104,68 +85,38 @@
   }
   .session-item:hover { background: var(--surface); }
   .session-item.active { background: var(--surface); border-left: 3px solid var(--coral); border-radius: 0 var(--radius) var(--radius) 0; }
-
-  .session-title {
-    font-size: 13px; font-weight: 500; color: var(--text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    margin-bottom: 4px; padding-right: 22px;
-  }
-
+  .session-title { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; padding-right: 22px; }
   .session-time { font-size: 11px; color: var(--muted); }
-
   .session-del {
     position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
     background: none; border: none; color: var(--muted); cursor: pointer;
-    opacity: 0; transition: opacity 0.1s, color 0.1s;
-    font-size: 16px; padding: 4px; line-height: 1;
+    opacity: 0; transition: opacity 0.1s, color 0.1s; font-size: 16px; padding: 4px; line-height: 1;
   }
   .session-item:hover .session-del { opacity: 1; }
   .session-del:hover { color: var(--coral) !important; }
-
-  .sidebar-bottom {
-    padding: 20px; flex-shrink: 0;
-    border-top: 1px solid var(--border);
-  }
+  .sidebar-bottom { padding: 20px; flex-shrink: 0; border-top: 1px solid var(--border); }
   .settings-link {
-    width: 100%; padding: 12px; background: transparent;
-    border: 1px solid var(--border); color: var(--text);
-    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+    width: 100%; padding: 12px; background: transparent; border: 1px solid var(--border);
+    color: var(--text); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
     border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
   .settings-link:hover { background: var(--surface); border-color: var(--border-light); }
 
-  /* ── main area ── */
-  .main {
-    flex: 1; min-width: 0;
-    display: flex; flex-direction: column;
-    background: var(--bg);
-  }
-
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; background: var(--bg); }
   .main-inner {
     flex: 1; display: flex; flex-direction: column;
-    max-width: 840px; width: 100%;
-    margin: 0 auto; padding: 0 40px;
-    min-height: 0;
+    max-width: 840px; width: 100%; margin: 0 auto; padding: 0 40px; min-height: 0;
   }
-
   header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 32px 0 24px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    padding: 32px 0 24px; border-bottom: 1px solid var(--border); flex-shrink: 0;
   }
-
-  .tagline {
-    font-size: 13px; font-weight: 600;
-    color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
-  }
-
+  .tagline { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
   .header-actions { display: flex; gap: 12px; }
   .hdr-btn {
-    background: none; border: 1px solid var(--border);
-    color: var(--text); font-family: 'Inter', sans-serif;
-    font-size: 12px; font-weight: 500;
+    background: none; border: 1px solid var(--border); color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
     padding: 8px 16px; border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
   }
   .hdr-btn:hover { background: var(--surface); border-color: var(--border-light); }
@@ -173,8 +124,7 @@
   #log {
     flex: 1; overflow-y: auto; padding: 40px 0;
     display: flex; flex-direction: column; gap: 32px;
-    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-    min-height: 0;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent; min-height: 0;
   }
 
   .empty {
@@ -188,8 +138,7 @@
 
   /* ── messages ── */
   .msg { display: flex; gap: 20px; align-items: flex-start; animation: fade-in 0.3s ease both; }
-  @keyframes fade-in { from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:translateY(0)} }
-
+  @keyframes fade-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
   .msg-avatar {
     width: 36px; height: 36px; border-radius: var(--radius);
     display: flex; align-items: center; justify-content: center;
@@ -197,64 +146,29 @@
   }
   .msg.user .msg-avatar { background: var(--surface); color: var(--text); border: 1px solid var(--border-light); }
   .msg.bot  .msg-avatar { background: transparent; color: var(--text); border: 1px solid var(--border); }
-
   .msg-body { flex: 1; min-width: 0; }
   .msg-role { font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; }
-
   .msg-bubble {
-    padding: 20px 24px; border-radius: var(--radius);
-    line-height: 1.6; font-size: 15px;
+    padding: 20px 24px; border-radius: var(--radius); line-height: 1.6; font-size: 15px;
   }
-
   .msg.user .msg-bubble { background: var(--user-bg); border: 1px solid var(--border-light); color: var(--text); }
   .msg.bot  .msg-bubble { background: var(--bot-bg); border: 1px solid var(--border); color: var(--text); }
   .msg-error .msg-bubble { background: #1F1111; border: 1px solid #3A1C1C; color: #FF8A8A; }
 
-  /* ── Markdown Output Styles ── */
   .msg-bubble p { margin-bottom: 1em; }
   .msg-bubble p:last-child { margin-bottom: 0; }
-  .msg-bubble pre {
-    background: #111;
-    padding: 16px;
-    border-radius: var(--radius);
-    overflow-x: auto;
-    margin-bottom: 1em;
-    border: 1px solid var(--border-light);
-  }
-  .msg-bubble code {
-    font-family: 'Inter', monospace;
-    background: #111;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 13px;
-    border: 1px solid var(--border-light);
-  }
-  .msg-bubble pre code {
-    background: transparent;
-    padding: 0;
-    border: none;
-  }
-  .msg-bubble ul, .msg-bubble ol {
-    margin-bottom: 1em;
-    padding-left: 20px;
-  }
+  .msg-bubble pre { background: #111; padding: 16px; border-radius: var(--radius); overflow-x: auto; margin-bottom: 1em; border: 1px solid var(--border-light); }
+  .msg-bubble code { font-family: 'Inter', monospace; background: #111; padding: 2px 6px; border-radius: 4px; font-size: 13px; border: 1px solid var(--border-light); }
+  .msg-bubble pre code { background: transparent; padding: 0; border: none; }
+  .msg-bubble ul, .msg-bubble ol { margin-bottom: 1em; padding-left: 20px; }
   .msg-bubble li { margin-bottom: 0.4em; }
   .msg-bubble a { color: var(--coral); text-decoration: none; }
   .msg-bubble a:hover { text-decoration: underline; }
-  .msg-bubble h1, .msg-bubble h2, .msg-bubble h3, .msg-bubble h4 {
-    margin: 1.5em 0 0.5em;
-    font-weight: 600;
-    color: var(--text);
-  }
+  .msg-bubble h1, .msg-bubble h2, .msg-bubble h3, .msg-bubble h4 { margin: 1.5em 0 0.5em; font-weight: 600; color: var(--text); }
   .msg-bubble h1 { font-size: 1.4em; }
   .msg-bubble h2 { font-size: 1.2em; }
   .msg-bubble h3 { font-size: 1.1em; }
-  .msg-bubble blockquote {
-    border-left: 3px solid var(--border-light);
-    padding-left: 16px;
-    color: var(--muted);
-    margin-bottom: 1em;
-  }
+  .msg-bubble blockquote { border-left: 3px solid var(--border-light); padding-left: 16px; color: var(--muted); margin-bottom: 1em; }
   .msg-bubble *:last-child { margin-bottom: 0; }
 
   .token-badge {
@@ -264,27 +178,153 @@
     padding: 4px 10px; border-radius: var(--radius); margin-top: 12px;
   }
 
+  .thinking-accordion {
+    margin-bottom: 10px;
+    border: 1px solid var(--think-border);
+    border-radius: var(--radius);
+    background: var(--think-bg);
+    overflow: hidden;
+  }
+
+  .thinking-toggle {
+    width: 100%; padding: 10px 14px;
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: none; cursor: pointer;
+    color: var(--think-head); font-family: 'Inter', sans-serif;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    transition: color 0.15s; text-align: left;
+  }
+  .thinking-toggle:hover { color: #7AAFCF; }
+
+  .thinking-toggle-icon {
+    width: 14px; height: 14px; flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  .thinking-toggle[aria-expanded="true"] .thinking-toggle-icon {
+    transform: rotate(90deg);
+  }
+
+  .thinking-pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--think-head); flex-shrink: 0;
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50%       { opacity: 1;   transform: scale(1.1); }
+  }
+  .thinking-toggle[aria-expanded="true"] .thinking-pulse {
+    animation: none; opacity: 0.6;
+  }
+
+  .thinking-toggle-label { flex: 1; }
+
+  .thinking-body-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+    opacity: 0;
+  }
+  .thinking-body-content.open {
+    max-height: 600px;
+    opacity: 1;
+  }
+  .thinking-inner {
+    padding: 4px 14px 14px;
+    font-size: 13px; line-height: 1.65;
+    color: var(--think-text);
+    font-style: italic;
+    border-top: 1px solid var(--think-border);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 540px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--think-border) transparent;
+  }
+
+  /* ── SOURCES PANEL ── */
+  .sources-panel {
+    margin-top: 12px;
+    border: 1px solid var(--source-border);
+    border-radius: var(--radius);
+    background: var(--source-bg);
+    overflow: hidden;
+  }
+
+  .sources-toggle {
+    width: 100%; padding: 10px 14px;
+    display: flex; align-items: center; gap: 8px;
+    background: none; border: none; cursor: pointer;
+    color: var(--source-text); font-family: 'Inter', sans-serif;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+    transition: color 0.15s; text-align: left;
+  }
+  .sources-toggle:hover { color: #7ABF74; }
+
+  .sources-toggle-icon {
+    width: 14px; height: 14px; flex-shrink: 0;
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+  }
+  .sources-toggle[aria-expanded="true"] .sources-toggle-icon {
+    transform: rotate(90deg);
+  }
+
+  .sources-count {
+    background: var(--source-chip); border: 1px solid var(--source-chip-border);
+    color: var(--source-text); font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 999px;
+  }
+
+  .sources-body-content {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.25s ease;
+    opacity: 0;
+  }
+  .sources-body-content.open { max-height: 400px; opacity: 1; }
+
+  .sources-inner {
+    padding: 6px 14px 14px; border-top: 1px solid var(--source-border);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+
+  .source-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 10px; border-radius: var(--radius);
+    background: var(--source-chip); border: 1px solid var(--source-chip-border);
+    transition: border-color 0.15s;
+  }
+  .source-item:hover { border-color: var(--source-text); }
+
+  .source-icon {
+    width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px;
+    color: var(--source-text); opacity: 0.7;
+  }
+
+  .source-info { flex: 1; min-width: 0; }
+  .source-title {
+    font-size: 12px; font-weight: 600; color: #A0C89B;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .source-path { font-size: 11px; color: var(--muted); font-family: 'Inter', monospace; }
+
   .confirm-card {
-    background: #262110; border: 1px solid #4A3C13; border-radius: var(--radius); padding: 24px;
-    color: var(--text);
+    background: #262110; border: 1px solid #4A3C13; border-radius: var(--radius); padding: 24px; color: var(--text);
   }
   .confirm-text { font-size: 15px; font-weight: 500; line-height: 1.5; margin-bottom: 20px; }
   .confirm-text span { font-weight: 700; color: var(--yellow); }
   .confirm-actions { display: flex; gap: 12px; }
-
   .confirm-yes, .confirm-no {
     padding: 12px 20px; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
     border-radius: var(--radius); cursor: pointer; transition: all 0.2s; border: none;
   }
-  .confirm-yes { background: var(--yellow); color: #000000; }
+  .confirm-yes { background: var(--yellow); color: #000; }
   .confirm-yes:hover { background: #D5B33E; }
-
   .confirm-no { background: transparent; border: 1px solid var(--border-light); color: var(--text); }
   .confirm-no:hover { background: rgba(255,255,255,0.05); }
-
   .confirm-yes:disabled, .confirm-no:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* ── thinking ── */
   .thinking { display: flex; gap: 20px; align-items: flex-start; animation: fade-in .3s ease both; }
   .thinking-avatar {
     width: 36px; height: 36px; border-radius: var(--radius); background: transparent;
@@ -298,7 +338,6 @@
     border-radius: var(--radius); background: var(--bot-bg); border: 1px solid var(--border);
   }
   .thinking-text { font-size: 13px; font-weight: 500; color: var(--muted); }
-
   .dot-row { display: flex; align-items: center; gap: 4px; }
   .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--muted); animation: blink 1.4s both infinite; }
   .dot:nth-child(1){animation-delay:0s} .dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
@@ -308,46 +347,36 @@
   .input-area { padding: 24px 0 40px; background: var(--bg); border-top: 1px solid var(--border); flex-shrink: 0; }
   .input-row { display: flex; gap: 12px; align-items: flex-end; }
   .input-wrap { flex: 1; position: relative; }
-
   textarea {
     width: 100%; background: var(--surface); border: 1px solid var(--border); color: var(--text);
     font-family: 'Inter', sans-serif; font-size: 15px; padding: 18px 20px; border-radius: var(--radius);
     resize: none; outline: none; min-height: 60px; max-height: 200px; line-height: 1.5;
     transition: border-color 0.2s; overflow-y: auto; scrollbar-width: none;
   }
-  textarea::placeholder { color: #666666; }
+  textarea::placeholder { color: #666; }
   textarea:focus { border-color: var(--border-light); background: #151515; }
-
   .send-btn {
-    width: 60px; height: 60px; border-radius: var(--radius);
-    background: var(--coral); border: none; cursor: pointer; flex-shrink: 0;
+    width: 60px; height: 60px; border-radius: var(--radius); background: var(--coral);
+    border: none; cursor: pointer; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center; transition: background 0.2s;
   }
   .send-btn:hover:not(:disabled) { background: var(--coral-hover); }
   .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .send-btn svg { width: 22px; height: 22px; stroke: #ffffff; }
-
+  .send-btn svg { width: 22px; height: 22px; stroke: #fff; }
   .input-hint { font-size: 12px; color: var(--muted); margin-top: 16px; text-align: center; font-weight: 500; }
-  kbd {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 4px; padding: 2px 6px; font-family: 'Inter', monospace; font-size: 11px;
-  }
+  kbd { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 2px 6px; font-family: 'Inter', monospace; font-size: 11px; }
 
   /* ── settings overlay ── */
   .overlay { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
   .overlay.open { display: flex; animation: fade-in 0.2s ease both; }
-
   .settings-panel {
     background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius);
-    width: 100%; max-width: 560px; padding: 40px; box-shadow: 0 24px 80px rgba(0,0,0,0.8);
-    margin: 16px;
+    width: 100%; max-width: 560px; padding: 40px; box-shadow: 0 24px 80px rgba(0,0,0,0.8); margin: 16px;
   }
-
   .settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
   .settings-title { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
   .close-btn { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 24px; line-height: 1; transition: color 0.2s; }
   .close-btn:hover { color: var(--text); }
-
   .field { margin-bottom: 24px; }
   .field-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
   .field-input {
@@ -356,24 +385,13 @@
   }
   .field-input:focus { border-color: var(--border-light); }
   .field-hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
-
   .settings-actions { display: flex; gap: 12px; margin-top: 32px; }
-  .btn-primary {
-    flex: 1; padding: 14px; background: var(--coral); border: none; color: #ffffff;
-    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
-    border-radius: var(--radius); cursor: pointer; transition: background 0.2s;
-  }
+  .btn-primary { flex: 1; padding: 14px; background: var(--coral); border: none; color: #fff; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; border-radius: var(--radius); cursor: pointer; transition: background 0.2s; }
   .btn-primary:hover:not(:disabled) { background: var(--coral-hover); }
   .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  .btn-secondary {
-    padding: 14px 20px; background: transparent; border: 1px solid var(--border); color: var(--text);
-    font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
-    border-radius: var(--radius); cursor: pointer; transition: all 0.2s;
-  }
+  .btn-secondary { padding: 14px 20px; background: transparent; border: 1px solid var(--border); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500; border-radius: var(--radius); cursor: pointer; transition: all 0.2s; }
   .btn-secondary:hover:not(:disabled) { background: var(--surface); border-color: var(--border-light); }
   .btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }
-
   .settings-status { font-size: 13px; font-weight: 500; margin-top: 20px; text-align: center; min-height: 18px; }
   .settings-status.ok   { color: #4ADE80; }
   .settings-status.err  { color: #F87171; }
@@ -385,18 +403,12 @@
 
   <aside class="sidebar">
     <div class="sidebar-top">
-      <div class="logo">
-        vault <span class="logo-arrow">→</span>
-      </div>
-      <button class="new-chat-btn" onclick="newChat()">
-        New Chat
-      </button>
+      <div class="logo">vault <span class="logo-arrow">→</span></div>
+      <button class="new-chat-btn" onclick="newChat()">New Chat</button>
     </div>
-
     <div class="sessions-scroll" id="sessions-list">
       <div class="sessions-empty" id="sessions-empty">No conversations yet</div>
     </div>
-
     <div class="sidebar-bottom">
       <button class="settings-link" onclick="openSettings()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -407,7 +419,6 @@
 
   <div class="main">
     <div class="main-inner">
-
       <header>
         <span class="tagline">Knowledge Intelligence</span>
         <div class="header-actions">
@@ -437,7 +448,6 @@
         </div>
         <div class="input-hint"><kbd>Enter</kbd> to send &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> for new line</div>
       </div>
-
     </div>
   </div>
 
@@ -473,10 +483,7 @@
 </div>
 
 <script>
-  marked.setOptions({
-    breaks: true,
-    gfm: true
-  });
+  marked.setOptions({ breaks: true, gfm: true });
 
   const logEl   = document.getElementById('log');
   const inputEl = document.getElementById('input');
@@ -516,23 +523,15 @@
       const list = await res.json();
       renderSessions(list);
       return list;
-    } catch {
-      return [];
-    }
+    } catch { return []; }
   }
 
   function renderSessions(list) {
     const container = document.getElementById('sessions-list');
     const emptyNote = document.getElementById('sessions-empty');
-
     [...container.querySelectorAll('.session-item')].forEach(el => el.remove());
-
-    if (!list.length) {
-      emptyNote.style.display = '';
-      return;
-    }
+    if (!list.length) { emptyNote.style.display = ''; return; }
     emptyNote.style.display = 'none';
-
     list.forEach(s => {
       const el = document.createElement('div');
       el.className = 'session-item' + (s.session_id === currentSessionId ? ' active' : '');
@@ -565,7 +564,7 @@
       const res     = await fetch(`/sessions/${sid}/history`);
       const history = await res.json();
       history.forEach(turn => {
-        appendMessage(turn.role === 'user' ? 'user' : 'bot', turn.content, null, false, false);
+        appendMessage(turn.role === 'user' ? 'user' : 'bot', turn.content, null, false, false, null, null);
       });
     } catch(e) {}
   }
@@ -575,9 +574,7 @@
       const res  = await fetch('/sessions', { method: 'POST' });
       const data = await res.json();
       currentSessionId = data.session_id;
-    } catch {
-      currentSessionId = 'mock-id-' + Date.now();
-    }
+    } catch { currentSessionId = 'mock-id-' + Date.now(); }
     clearLog();
     await loadSessions();
     highlightSession(currentSessionId);
@@ -587,16 +584,10 @@
   async function deleteSession(event, sid) {
     event.stopPropagation();
     try { await fetch(`/sessions/${sid}`, { method: 'DELETE' }); } catch(e) {}
-    if (sid === currentSessionId) {
-      currentSessionId = null;
-      clearLog();
-    }
+    if (sid === currentSessionId) { currentSessionId = null; clearLog(); }
     const list = await loadSessions();
-    if (!currentSessionId && list.length) {
-      await selectSession(list[0].session_id);
-    } else if (!list.length) {
-      await newChat();
-    }
+    if (!currentSessionId && list.length) await selectSession(list[0].session_id);
+    else if (!list.length) await newChat();
   }
 
   async function deleteCurrentSession() {
@@ -609,7 +600,107 @@
     emptyEl.style.display = '';
   }
 
-  function appendMessage(role, text, tokens = null, isError = false, animate = true) {
+  function makeThinkingAccordion(thinkingText) {
+    if (!thinkingText) return null;
+    const wrap = document.createElement('div');
+    wrap.className = 'thinking-accordion';
+
+    const btn = document.createElement('button');
+    btn.className = 'thinking-toggle';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = `
+      <div class="thinking-pulse"></div>
+      <svg class="thinking-toggle-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 3 11 8 6 13"/>
+      </svg>
+      <span class="thinking-toggle-label">Reasoning Process</span>`;
+
+    const bodyWrap = document.createElement('div');
+    bodyWrap.className = 'thinking-body-content';
+
+    const inner = document.createElement('div');
+    inner.className = 'thinking-inner';
+    inner.textContent = thinkingText;
+    bodyWrap.appendChild(inner);
+
+    btn.addEventListener('click', () => {
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      bodyWrap.classList.toggle('open', !expanded);
+    });
+
+    wrap.appendChild(btn);
+    wrap.appendChild(bodyWrap);
+    return wrap;
+  }
+
+  function makeSourcesPanel(sources) {
+    if (!sources || !sources.length) return null;
+    const seen = new Set();
+    const unique = sources.filter(s => {
+      if (seen.has(s.source)) return false;
+      seen.add(s.source); return true;
+    });
+
+    const wrap = document.createElement('div');
+    wrap.className = 'sources-panel';
+
+    const btn = document.createElement('button');
+    btn.className = 'sources-toggle';
+    btn.setAttribute('aria-expanded', 'false');
+    btn.innerHTML = `
+      <svg class="sources-toggle-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 3 11 8 6 13"/>
+      </svg>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;opacity:0.7">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+      <span style="flex:1">Sources</span>
+      <span class="sources-count">${unique.length}</span>`;
+
+    const bodyWrap = document.createElement('div');
+    bodyWrap.className = 'sources-body-content';
+
+    const inner = document.createElement('div');
+    inner.className = 'sources-inner';
+
+    unique.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'source-item';
+
+      const fileName = s.source.split('/').pop().replace(/\.md$/, '');
+      const displayTitle = s.title || fileName;
+      const displayPath  = s.source;
+
+      item.innerHTML = `
+        <svg class="source-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <div class="source-info">
+          <div class="source-title">${escapeHtml(displayTitle)}</div>
+          <div class="source-path">${escapeHtml(displayPath)}</div>
+        </div>`;
+      inner.appendChild(item);
+    });
+
+    bodyWrap.appendChild(inner);
+
+    btn.addEventListener('click', () => {
+      const expanded = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!expanded));
+      bodyWrap.classList.toggle('open', !expanded);
+    });
+
+    wrap.appendChild(btn);
+    wrap.appendChild(bodyWrap);
+    return wrap;
+  }
+
+  function appendMessage(role, text, tokens = null, isError = false, animate = true, thinking = null, sources = null) {
     emptyEl.style.display = 'none';
     const wrap = document.createElement('div');
     wrap.className = `msg ${role}${isError ? ' msg-error' : ''}`;
@@ -626,17 +717,23 @@
     roleEl.className = 'msg-role';
     roleEl.textContent = role === 'user' ? 'You' : 'Vault';
 
-    const bubble = document.createElement('div');
-    bubble.className = 'msg-bubble';
+    body.appendChild(roleEl);
 
-    if (role === 'bot' && !isError) {
-      bubble.innerHTML = marked.parse(text);
-    } else {
-      bubble.textContent = text;
+    if (role === 'bot' && !isError && thinking) {
+      const accordion = makeThinkingAccordion(thinking);
+      if (accordion) body.appendChild(accordion);
     }
 
-    body.appendChild(roleEl);
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    if (role === 'bot' && !isError) bubble.innerHTML = marked.parse(text);
+    else bubble.textContent = text;
     body.appendChild(bubble);
+
+    if (role === 'bot' && !isError && sources && sources.length) {
+      const panel = makeSourcesPanel(sources);
+      if (panel) body.appendChild(panel);
+    }
 
     if (tokens !== null && !isError && tokens > 0) {
       const badge = document.createElement('div');
@@ -650,10 +747,7 @@
     logEl.appendChild(wrap);
 
     setTimeout(() => {
-      logEl.scrollTo({
-        top: wrap.offsetTop - 40,
-        behavior: 'smooth'
-      });
+      logEl.scrollTo({ top: wrap.offsetTop - 40, behavior: 'smooth' });
     }, 10);
   }
 
@@ -661,7 +755,6 @@
     emptyEl.style.display = 'none';
     const wrap = document.createElement('div');
     wrap.className = 'msg bot'; wrap.id = 'confirm-msg';
-
     wrap.innerHTML = `
       <div class="msg-avatar">→</div>
       <div class="msg-body">
@@ -674,16 +767,8 @@
           </div>
         </div>
       </div>`;
-
     logEl.appendChild(wrap);
-
-    setTimeout(() => {
-      logEl.scrollTo({
-        top: wrap.offsetTop - 40,
-        behavior: 'smooth'
-      });
-    }, 10);
-
+    setTimeout(() => { logEl.scrollTo({ top: wrap.offsetTop - 40, behavior: 'smooth' }); }, 10);
     document.getElementById('confirm-yes').addEventListener('click', async () => {
       disableConfirmButtons();
       await sendWithExternal(pendingQuery, true);
@@ -715,15 +800,8 @@
       </div>`;
     emptyEl.style.display = 'none';
     logEl.appendChild(el);
-
-    setTimeout(() => {
-      logEl.scrollTo({
-        top: el.offsetTop - 40,
-        behavior: 'smooth'
-      });
-    }, 10);
+    setTimeout(() => { logEl.scrollTo({ top: el.offsetTop - 40, behavior: 'smooth' }); }, 10);
   }
-
   function hideThinking() { document.getElementById('thinking')?.remove(); }
 
   async function sendMessage() {
@@ -750,18 +828,24 @@
       } else if (data.needs_confirmation) {
         appendConfirmation(text);
       } else {
-        appendMessage('bot', data.answer, data.total_tokens);
+        appendMessage(
+          'bot',
+          data.answer,
+          data.total_tokens,
+          false, true,
+          data.thinking || null,
+          data.sources  || null
+        );
         setInputBusy(false);
       }
     } catch {
       hideThinking();
       setTimeout(() => {
-        if(text.toLowerCase().includes('external')) {
-           appendConfirmation(text);
+        if (text.toLowerCase().includes('external')) {
+          appendConfirmation(text);
         } else {
-           const mockMarkdown = `Backend unreachable.`;
-           appendMessage('bot', mockMarkdown);
-           setInputBusy(false);
+          appendMessage('bot', 'Backend unreachable.');
+          setInputBusy(false);
         }
       }, 1000);
     }
@@ -783,11 +867,11 @@
       hideThinking();
       document.getElementById('confirm-msg')?.remove();
       if (!res.ok) appendMessage('bot', data.detail || 'System error encountered.', null, true);
-      else         appendMessage('bot', data.answer, data.total_tokens);
+      else appendMessage('bot', data.answer, data.total_tokens, false, true, data.thinking || null, data.sources || null);
     } catch {
       hideThinking();
       document.getElementById('confirm-msg')?.remove();
-      appendMessage('bot', 'Backend unreachable. External knowledge generation mock response.', null, false);
+      appendMessage('bot', 'Backend unreachable.', null, false);
     }
     setInputBusy(false);
   }
@@ -805,7 +889,7 @@
     overlay.classList.add('open');
     try {
       const res = await fetch('/settings');
-      if(res.ok) {
+      if (res.ok) {
         const data = await res.json();
         document.getElementById('s-vault').value   = data.vault_path      || '';
         document.getElementById('s-exclude').value = data.exclude_folders || '';
@@ -821,7 +905,7 @@
   async function saveSettings() {
     setSettingsBusy(true); setStatus('Saving parameters…','info');
     try {
-      const res  = await fetch('/settings', {
+      const res = await fetch('/settings', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           vault_path:      document.getElementById('s-vault').value.trim(),
@@ -831,7 +915,7 @@
       });
       const data = await res.json();
       if (!res.ok) setStatus(data.detail || 'Error applying config.','err');
-      else { setStatus('Configuration applied.','ok'); }
+      else setStatus('Configuration applied.','ok');
     } catch {
       setTimeout(() => setStatus('Saved (mock backend).', 'ok'), 800);
     }
@@ -853,11 +937,8 @@
 
   (async () => {
     const list = await loadSessions();
-    if (list.length) {
-      await selectSession(list[0].session_id);
-    } else {
-      await newChat();
-    }
+    if (list.length) await selectSession(list[0].session_id);
+    else await newChat();
     inputEl.focus();
   })();
 </script>

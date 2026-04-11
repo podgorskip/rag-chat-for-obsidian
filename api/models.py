@@ -8,6 +8,8 @@ class MessageRequest(BaseModel):
 class MessageResponse(BaseModel):
     answer: str | None = None
     total_tokens: int = 0
+    thinking: str | None = None
+    sources: list | None = None
     needs_confirmation: bool = False
 
 class SettingsPayload(BaseModel):
