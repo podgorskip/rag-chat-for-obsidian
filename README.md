@@ -29,8 +29,9 @@ Vault is a local, privacy-first AI chatbot that reads your knowledge vault (like
 
 ## How it works
 
+<img width="1470" height="829" alt="context-based-prompt" src="https://github.com/user-attachments/assets/e9d0740e-a2c1-403b-8849-40ea7c5bfbda" />
 
-https://github.com/user-attachments/assets/6be89912-1faa-419d-a308-d2856bcc76b9
+<img width="1470" height="831" alt="context-based-prompt-01" src="https://github.com/user-attachments/assets/c1631978-ff5f-4b9b-b0b0-5502a0115684" />
 
 
 
@@ -242,6 +243,12 @@ http://localhost:8000
 ## Using the chat interface
 
 **Asking questions** - type your question and press `Enter`. The model retrieves the most relevant passages from your notes and uses them to answer, complete with full Markdown formatting (lists, headers, code blocks). It remembers the conversation so follow-up questions like *"tell me more"* or *"what did you mean by that?"* work correctly.
+
+**External questions** - if no relevant context is available, the chat prompts the user to confirm whether it should retrieve information from general knowledge. Upon receiving approval, it provides a well-structured answer supported by a transparent reasoning process.
+
+<img width="1470" height="830" alt="external-prompt-consent" src="https://github.com/user-attachments/assets/3bc39774-d0e0-46ca-ae7e-0403f42a8a7b" />
+<img width="1470" height="828" alt="external-prompt-answer" src="https://github.com/user-attachments/assets/753b45f9-07b3-43b0-902e-c5af83cd4e79" />
+
 
 **Chain of Thought (Thinking)** - responses often include the model's reasoning process, displayed visually before the answer is delivered, allowing you to trace how the LLM arrived at its conclusions.
 
