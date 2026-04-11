@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import textwrap
 import time
 import uuid
@@ -114,7 +115,11 @@ class Chatbot:
         except Exception as e:
             raise RuntimeError(f"LLM call failed for session={session_id!r}: {e}") from e
 
-        answer = response.choices[0].message.content
+        raw_response = response.choices[0].message.content
+        answer_match = re.search(r"<answer>(.*?)</answer>", raw_response, re.DOTALL)
+        answer = answer_match.group(1) if answer_match else None
+        thinking_match = re.search(r"<thinking>(.*?)</thinking>", raw_response, re.DOTALL)
+        thinking = thinking_match.group(1) if thinking_match else None
 
         history.append({"role": "user", "content": standalone_query})
         history.append({"role": "assistant", "content": answer})
@@ -122,12 +127,12 @@ class Chatbot:
 
         self._touch_meta(session_id)
         self._track_tokens(response.usage)
-        self._log(standalone_query, context, answer)
+        self._log(standalone_query, context, answer, thinking)
 
         return {
             "answer": answer,
             "tokens": self.rag.cumulative_tokens,
-            "thinking": standalone_query,
+            "thinking": thinking,
             "sources": [
                 {"title": chunk["title"], "source": chunk["content"]}
                 for chunk in chunks
@@ -141,7 +146,8 @@ class Chatbot:
         self.rag.cumulative_tokens["completion_tokens"] += usage.completion_tokens
         self.rag.cumulative_tokens["total_tokens"]      += usage.total_tokens
 
-    def _log(self, query: str, context: str, answer: str):
+    def _log(self, query: str, context: str, answer: str, thinking: str) -> None:
         logging.info("[QUESTION]: %s", query)
         logging.info("[CONTEXT]: %s", context)
         logging.info("[ANSWER]: %s", answer)
+        logging.info("[THINKING]: %s", thinking)

@@ -804,6 +804,38 @@
   }
   function hideThinking() { document.getElementById('thinking')?.remove(); }
 
+  async function sendMessage(userText) {
+    showThinking();
+
+    try {
+      const response = await fetch('/your-endpoint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userText })
+      });
+
+      if (!response.ok) throw new Error('Network error');
+
+      const data = await response.json();
+      const text = data.answer;
+
+      hideThinking();
+
+      if (text.toLowerCase().includes('external')) {
+        appendConfirmation(text);
+      } else {
+        appendMessage('bot', text);
+      }
+
+    } catch (err) {
+      hideThinking();
+      appendMessage('bot', 'Backend unreachable.');
+      console.error(err);
+    } finally {
+      setInputBusy(false);
+    }
+  }
+
   async function sendMessage() {
     const text = inputEl.value.trim();
     if (!text || busy || !currentSessionId) return;
@@ -839,15 +871,7 @@
         setInputBusy(false);
       }
     } catch {
-      hideThinking();
-      setTimeout(() => {
-        if (text.toLowerCase().includes('external')) {
-          appendConfirmation(text);
-        } else {
-          appendMessage('bot', 'Backend unreachable.');
-          setInputBusy(false);
-        }
-      }, 1000);
+      await sendMessage(text);
     }
 
     await loadSessions();
