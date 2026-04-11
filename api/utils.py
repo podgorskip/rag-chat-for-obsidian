@@ -6,6 +6,8 @@ from redis import Redis
 import redis as redis_lib
 from chatbot.chatbot import Chatbot
 from connectors.vault_connector import build_knowledge_base
+from embedders.embedder import Embedder
+from embedders.embedder_config import EmbedderConfig
 from rags.llm_client import LLMClient
 from rags.rag import RAG
 
@@ -47,10 +49,12 @@ def save_settings(vault_path: str, exclude_folders: str, knowledge_base: str):
     load_dotenv(override=True)
 
 
-def build_chatbot(embed_model, redis_client) -> Chatbot:
+def build_chatbot(redis_client) -> Chatbot:
     s = get_settings()
     kb_path = s["knowledge_base"]
     exclude = [f.strip() for f in s["exclude_folders"].split(",") if f.strip()]
+    cfg = EmbedderConfig(provider="bge", model_name="BAAI/bge-m3")
+    embedder = Embedder(cfg)
 
     if Path(kb_path).exists():
         df = pd.read_pickle(kb_path)
@@ -60,10 +64,11 @@ def build_chatbot(embed_model, redis_client) -> Chatbot:
             vault_path=s["vault_path"],
             exclude_folders=exclude,
             output_path=kb_path,
+            embedder=embedder
         )
 
     client = LLMClient(provider="ollama", model="llama3.2")
-    rag    = RAG(client=client, embedding_model=embed_model, df=df, llm_model="llama3.2")
+    rag    = RAG(client=client, embedder=embedder, df=df, llm_model="llama3.2")
     return Chatbot(rag, redis_client)
 
 def get_redis_client() -> Redis:

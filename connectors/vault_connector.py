@@ -2,61 +2,96 @@ import re
 import logging
 import pandas as pd
 from pathlib import Path
-from sentence_transformers import SentenceTransformer
+from embedders.embedder import Embedder
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 log = logging.getLogger(__name__)
 
 def clean_markdown(text: str) -> str:
-    text = re.sub(r"\A---\n.*?\n---(?:\n|$)", "", text, flags=re.DOTALL)
-    text = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", text)
-    text = re.sub(r"\[\[([^\]]+)\]\]", r"\1", text)
-    text = re.sub(r"!\[\[.*?\]\]", "", text)
-    text = re.sub(r"!\[.*?\]\(.*?\)", "", text)
-    text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)
+    text = re.sub(r"\A---\n.*?\n---(?:\n|$)", "", text, flags=re.DOTALL)    # front-matter
+    text = re.sub(r"\[\[([^\]|]+)\|([^\]]+)\]\]", r"\2", text)              # aliased wikilinks
+    text = re.sub(r"\[\[([^\]]+)\]\]", r"\1", text)                         # plain wikilinks
+    text = re.sub(r"!\[\[.*?\]\]", "", text)                                # embedded images
+    text = re.sub(r"!\[.*?\]\(.*?\)", "", text)                             # markdown images
+    text = re.sub(r"\[([^\]]+)\]\([^\)]+\)", r"\1", text)                   # hyperlinks
+    text = re.sub(r"```.*?```", "", text, flags=re.DOTALL)                  # fenced code blocks
+    text = re.sub(r"`[^`]+`", "", text)                                     # inline code
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip()
 
-def split_long_section(title: str, content: str, max_chars: int = 1200) -> list[dict]:
-    paragraphs = content.split("\n\n")
-    chunks = []
-    current_text = ""
+def _split_sentences(text: str) -> list[str]:
+    parts = re.split(r"(?<=[.!?])\s+(?=[A-Z\"])|(?<=\n)", text)
+    return [p.strip() for p in parts if p.strip()]
 
-    for p in paragraphs:
-        if len(current_text) + len(p) < max_chars:
-            current_text += p + "\n\n"
-        else:
-            if current_text.strip():
-                chunks.append({"title": title, "content": current_text.strip()})
-            current_text = p + "\n\n"
+def _build_chunks_with_overlap(sentences: list[str], chunk_size: int, overlap: int) -> list[str]:
+    chunks: list[str] = []
+    start = 0
 
-    if current_text.strip():
-        chunks.append({"title": title, "content": current_text.strip()})
+    while start < len(sentences):
+        current, length = [], 0
+        i = start
+
+        while i < len(sentences):
+            s = sentences[i]
+            if length + len(s) + 1 > chunk_size and current:
+                break
+            current.append(s)
+            length += len(s) + 1
+            i += 1
+
+        if not current:
+            current = [sentences[start]]
+            i = start + 1
+
+        chunks.append(" ".join(current))
+
+        back, acc = i - 1, 0
+        while back > start and acc < overlap:
+            acc += len(sentences[back])
+            back -= 1
+        start = max(back + 1, start + 1)
 
     return chunks
 
-def chunk_by_heading(title: str, content: str, min_length: int = 50, max_length: int = 1200) -> list[dict]:
-    content = clean_markdown(content)
-    sections = re.split(r"(?:^|\n)(?=#{1,3} )", content)
-    chunks = list()
+def chunk_document(
+        title: str,
+        content: str,
+        chunk_size: int = 1_000,
+        overlap: int = 150,
+        min_length: int = 60,
+) -> list[dict]:
 
-    for section in sections:
+    content = clean_markdown(content)
+    raw_sections = re.split(r"(?m)(?=^#{1,3} )", content)
+    chunks: list[dict] = []
+
+    for section in raw_sections:
         section = section.strip()
         if not section:
             continue
 
         lines = section.splitlines()
-        heading = ""
         if lines[0].startswith("#"):
             heading = lines[0].lstrip("#").strip()
+            body = "\n".join(lines[1:]).strip()
+        else:
+            heading = ""
+            body = section
 
-        chunk_title = f"{title} > {heading}" if heading else title
+        section_title = f"{title} > {heading}" if heading else title
 
-        if len(section) > max_length:
-            sub_chunks = split_long_section(chunk_title, section, max_length)
-            chunks.extend(sub_chunks)
-        elif len(section) >= min_length:
-            chunks.append({"title": chunk_title, "content": section})
+        if not body:
+            continue
+
+        sentences = _split_sentences(body)
+        raw_chunks = _build_chunks_with_overlap(sentences, chunk_size, overlap)
+
+        for chunk_text in raw_chunks:
+            if len(chunk_text) < min_length:
+                if chunks:
+                    chunks[-1]["content"] += " " + chunk_text
+                continue
+            chunks.append({"title": section_title, "content": chunk_text})
 
     return chunks
 
@@ -64,17 +99,19 @@ def read_vault(
         vault_path: str,
         exclude_folders: list[str] | None = None,
         exclude_files: list[str] | None = None,
+        chunk_size: int = 1_000,
+        overlap: int = 150,
+        min_length: int = 60,
 ) -> list[dict]:
     exclude_folders = set(exclude_folders or ["templates", ".trash", ".obsidian"])
     exclude_files = set(exclude_files or [])
 
     vault = Path(vault_path)
-    records = []
+    records: list[dict] = []
 
     for md_file in vault.rglob("*.md"):
         if any(part in exclude_folders for part in md_file.parts):
             continue
-
         if md_file.name in exclude_files:
             continue
 
@@ -83,50 +120,35 @@ def read_vault(
             title = md_file.stem
             rel = str(md_file.relative_to(vault))
 
-            content = clean_markdown(raw)
-
-            if content:
-                records.append({
-                    "title": title,
-                    "content": content,
-                    "source": rel,
-                })
+            for chunk in chunk_document(title, raw, chunk_size, overlap, min_length):
+                records.append({**chunk, "source": rel})
 
         except Exception as e:
             log.warning(f"Could not read {md_file}: {e}")
 
-    log.info(f"Loaded {len(records)} notes from {vault_path}")
+    log.info(f"Produced {len(records)} chunks from vault: {vault_path}")
     return records
 
 def build_knowledge_base(
         vault_path: str,
+        embedder: Embedder,
         output_path: str = "knowledge_base.pkl",
-        model_name: str = "BAAI/bge-small-en-v1.5",
         exclude_folders: list[str] | None = None,
-        exclude_files: list[str] | None = None
+        exclude_files: list[str] | None = None,
+        chunk_size: int = 1_000,
+        overlap: int = 150,
 ) -> pd.DataFrame:
-    records = read_vault(vault_path, exclude_folders, exclude_files)
+    records = read_vault(vault_path, exclude_folders, exclude_files, chunk_size, overlap)
 
     if not records:
         raise ValueError(f"No markdown files found in: {vault_path}")
 
-    log.info(f"Loading embedding model: {model_name}")
-    logging.getLogger("sentence_transformers").setLevel(logging.ERROR)
-
-    model = SentenceTransformer(model_name, trust_remote_code=True)
     df = pd.DataFrame(records)
-    contents = ("Document: " + df["title"] + "\n\n" + df["content"]).tolist()
-
-    embeddings = model.encode(
-        contents,
-        normalize_embeddings=True,
-        show_progress_bar=True,
-        batch_size=64
-    )
+    texts = ("Document: " + df["title"] + "\n\n" + df["content"]).tolist()
+    embeddings = embedder.encode(texts)
 
     df["embedding"] = list(embeddings)
-
     df.to_pickle(output_path)
-    log.info(f"Saved knowledge base: {output_path}  ({len(df)} chunks)")
+    log.info(f"Saved knowledge base → {output_path}  ({len(df)} chunks)")
 
     return df
