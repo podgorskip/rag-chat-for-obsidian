@@ -42,14 +42,14 @@ Your notes (.md files)
   • Reads all markdown files recursively
   • Strips wikilinks, tags, frontmatter, code blocks
   • Splits each note by heading into chunks
-  • Embeds every chunk with sentence-transformers
+  • Embeds every chunk via configured embedder (e.g. BGE-M3)
   • Saves to knowledge_base.pkl
         │
         ▼
 [ RAG (rag.py) ]
   • Embeds the user's query
-  • Finds the most similar chunks via cosine similarity
-  • If nothing found → rephrases query and retries
+  • Uses Hybrid Search (Dense Embeddings + BM25) to find most relevant chunks
+  • If nothing found → context query expansion
   • Builds a context string within token limits
         │
         ▼
@@ -71,7 +71,8 @@ Your notes (.md files)
         ▼
 [ Browser UI (index.html) ]
   • Dark, startup-style chat interface
-  • Thinking animation while model responds
+  • Shows thinking (Chain of Thought) before returning answers
+  • Displays sources used for the response
   • Rich Markdown rendering for responses
   • Settings panel to change vault path at runtime
 ```
@@ -86,11 +87,14 @@ rag-chat/
 ├── chatbot/
 │   └── chatbot.py             # Conversation history manager (Redis)
 ├── connectors/
-│   └── vault_connector.py  # Vault reader + embedder
+│   └── vault_connector.py     # Vault reader + embedder
+├── embedders/                 # Embedding models support
+│   ├── embedder.py            # Embedder interface
+│   └── embedder_config.py     # Embedder configuration (provider, batch size)
 ├── rags/
 │   ├── rag.py                 # Core retrieval + generation logic
 │   ├── llm_client.py          # Ollama / OpenAI abstraction
-│   └── rag_config.py          # Prompts, thresholds, token limits
+│   └── rag_config.py          # Prompts, hybrid search weights, thresholds
 ├── api/                       # Modular FastAPI backend
 │   ├── routes/                # Endpoints (chat, sessions, reset, settings)
 │   ├── dependencies.py        # Shared dependencies (e.g., get_chatbot)
@@ -136,18 +140,19 @@ pip install -r requirements.txt
 
 `requirements.txt`:
 ```
-sentence-transformers==3.0.1
+sentence-transformers~=5.3.0
 scikit-learn==1.5.1
-numpy==2.0.1
-pandas==2.2.2
-torch==2.4.0
-requests==2.32.3
-openai==1.40.6
-fastapi==0.115.6
+numpy~=2.4.4
+pandas~=3.0.2
+torch~=2.11.0
+requests~=2.33.1
+openai~=2.30.0
+fastapi~=0.135.3
 uvicorn==0.30.6
-pydantic==2.8.2
+pydantic~=2.12.5
 python-dotenv~=1.2.2
-redis
+redis~=7.4.0
+rank-bm25~=0.2.2
 ```
 
 ### 3. Install and start Ollama
@@ -212,7 +217,7 @@ With options:
 ```bash
 python connectors/vault_connector.py /path/to/vault \
     --output generated_sources/knowledge_base.pkl \
-    --model all-MiniLM-L6-v2 \
+    --model BAAI/bge-m3 \
     --exclude-dirs templates archive .trash \
     --exclude-files README.md
 ```
@@ -238,6 +243,10 @@ http://localhost:8000
 
 **Asking questions** - type your question and press `Enter`. The model retrieves the most relevant passages from your notes and uses them to answer, complete with full Markdown formatting (lists, headers, code blocks). It remembers the conversation so follow-up questions like *"tell me more"* or *"what did you mean by that?"* work correctly.
 
+**Chain of Thought (Thinking)** - responses often include the model's reasoning process, displayed visually before the answer is delivered, allowing you to trace how the LLM arrived at its conclusions.
+
+**Sources** - the UI explicitly displays the notes and passages referenced during the generation, allowing you to jump back into your vault and review context.
+
 **Token counter** - if you're using OpenAI, each response shows the cumulative token count. Ollama does not report real token counts so this is hidden.
 
 **Sessions** - The app now supports multiple persistent chat sessions, powered by Redis.
@@ -252,37 +261,46 @@ http://localhost:8000
 
 Changes take effect immediately without restarting the server.
 
-<img width="1113" height="636" alt="vault-settings" src="https://github.com/user-attachments/assets/6369fb4c-3756-488f-8363-b61abb134518" />
-
-
 ---
 
 ## Configuration reference
 
-All model behaviour is controlled in `rags/rag_config.py`:
+All model and retrieval behaviour is controlled in `rags/rag_config.py`:
 
 ```python
+@dataclass
 class Config:
-    def __init__(self):
-        self.MAX_CONTEXT_TOKENS = 2000
-        self.MIN_SIMILARITY = 0.5
-        self.DELTA_CUTOFF = 0.08
-        self.TOP_K = 0.5
-        
-        self.REPHRASE_PROMPT = """You are a helpful assistant. Rephrase the following user query to be more descriptive and
-        search-engine friendly. Output ONLY the rephrased query."""
-        
-        self.ANSWER_PROMPT = """You are a fast, sophisticated, direct assistant.
-        Base only on the context attached. Use your knowledge only to understand query, not to generate answer.
-        ..."""
+    semantic_weight: float = 0.7
+    bm25_weight: float = 0.3
+    top_fraction: float = 0.2
+    min_similarity: float = 0.65
+    delta_cutoff: float = 0.12
+    max_context_tokens: int = 10000
+
+    contextualize_prompt: str = field(...)
+    answer_prompt: str = field(...)
+    external_prompt: str = ...
 ```
 
 | Parameter | Effect |
 |---|---|
-| `TOP_K` | Higher = more chunks retrieved, slower but more context |
-| `MIN_SIMILARITY` | Lower = looser matching, may retrieve less relevant chunks |
-| `DELTA_CUTOFF` | Controls how aggressively low-relevance chunks are cut off |
-| `MAX_CONTEXT_TOKENS` | Hard cap on how much context is sent to the LLM |
+| `semantic_weight` | Weight of dense embeddings for hybrid retrieval |
+| `bm25_weight` | Weight of sparse (BM25) search for hybrid retrieval |
+| `top_fraction` | Fraction of total chunks to consider in early stages |
+| `min_similarity` | Minimum hybrid similarity score to include a chunk |
+| `delta_cutoff` | Controls how aggressively low-relevance chunks are cut off |
+| `max_context_tokens` | Hard cap on how much context is sent to the LLM |
+
+You can also configure the embedder in `embedders/embedder_config.py`:
+
+```python
+@dataclass
+class EmbedderConfig:
+    provider: str = "bge"
+    model_name: str = "BAAI/bge-m3"
+    batch_size: int = 64
+    openai_api_key: str | None = None
+```
 
 ---
 
@@ -367,6 +385,8 @@ The server reloads the new index automatically without a restart.
 {
   "answer": "RAG stands for...",
   "total_tokens": 125,
+  "thinking": "The user is asking about...",
+  "sources": [{"title": "Concept Note", "url": "..."}],
   "needs_confirmation": false
 }
 ```
@@ -396,7 +416,7 @@ ollama pull llama3.2
 
 **Answers are irrelevant or hallucinated**
 
-Lower `MIN_SIMILARITY` in `rags/rag_config.py` to retrieve more chunks, or rebuild the index after updating your notes.
+Lower `min_similarity` in `rags/rag_config.py` to retrieve more chunks, or rebuild the index after updating your notes.
 
 **Slow responses**
 
