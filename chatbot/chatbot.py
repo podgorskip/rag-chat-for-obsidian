@@ -89,15 +89,16 @@ class Chatbot:
             logging.debug("Fallback retrieval returned no chunks for session=%s", session_id)
 
         context = self.rag.build_context(chunks) if chunks else ""
-        system_prompt = self.rag.config.answer_prompt.format(
-            context=context or "No context available."
-        )
 
         if not context:
             if confirm_external is None or not confirm_external():
                 return None
             system_prompt = self.rag.config.external_prompt
             logging.info("Using external prompt for session=%s, prompt")
+        else:
+            system_prompt = self.rag.config.answer_prompt.format(
+                context=context or "No context available."
+            )
 
         messages = [
             {"role": "system", "content": system_prompt},
